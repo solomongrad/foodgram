@@ -14,4 +14,4 @@ docker compose up
 
 ### Автор
 
-[Роман Куделин](https://github.com/solomongrad)
+[zxc](https://github.com/solomongrad)
