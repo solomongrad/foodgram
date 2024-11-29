@@ -12,7 +12,7 @@ from recipes.models import (
     ShoppingCart,
     Tag
 )
-from users.models import Subscribtion, User
+from users.models import Subscription, User
 
 
 class UserSerializer(DjoserUserSerializer):
@@ -29,7 +29,7 @@ class UserSerializer(DjoserUserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscribtion.objects.filter(
+        return Subscription.objects.filter(
             user=user.id,
             author=obj.id
         ).exists()
@@ -197,7 +197,7 @@ class RecipesChangeSerializer(serializers.ModelSerializer):
         return RecipesReadSerializer(instance, context=self.context).data
 
 
-class SubscribtionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(serializers.ModelSerializer):
     recipes_count = serializers.SerializerMethodField(
         method_name='get_recipes_count'
     )
@@ -235,7 +235,7 @@ class SubscribtionSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        return Subscribtion.objects.filter(user=user, author=obj).exists()
+        return Subscription.objects.filter(user=user, author=obj).exists()
 
 
 class SubscriptionChangeSerializer(serializers.ModelSerializer):
@@ -245,13 +245,13 @@ class SubscriptionChangeSerializer(serializers.ModelSerializer):
     user = UserSerializer
 
     class Meta:
-        model = Subscribtion
+        model = Subscription
         fields = ('author', 'user')
 
     def validate(self, data):
         author_id = data['author']
         user_id = data['user']
-        if Subscribtion.objects.filter(
+        if Subscription.objects.filter(
             author=author_id, user=user_id
         ).exists():
             raise serializers.ValidationError(
@@ -266,6 +266,6 @@ class SubscriptionChangeSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return SubscribtionSerializer(instance.author, context={
+        return SubscriptionSerializer(instance.author, context={
             'request': self.context.get('request')
         }).data

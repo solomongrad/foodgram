@@ -10,11 +10,11 @@ from rest_framework.response import Response
 from api.serializers import (
     AvatarSerializer,
     SubscriptionChangeSerializer,
-    SubscribtionSerializer,
-    UserSerializer,
+    SubscriptionSerializer,
+    UserSerializer
 )
 
-from .models import Subscribtion
+from .models import Subscription
 
 User = get_user_model()
 
@@ -46,7 +46,7 @@ class CustomUserViewSet(UserViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = Subscribtion.objects.filter(user=user, author=author)
+        subscription = Subscription.objects.filter(user=user, author=author)
         if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -60,7 +60,7 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         queryset = User.objects.filter(author__user=user)
         pages = self.paginate_queryset(queryset)
-        serializer = SubscribtionSerializer(pages,
+        serializer = SubscriptionSerializer(pages,
                                             many=True,
                                             context={'request': request})
         return self.get_paginated_response(serializer.data)

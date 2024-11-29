@@ -60,7 +60,7 @@ class User(AbstractUser):
         ordering = ('date_joined',)
 
 
-class Subscribtion(models.Model):
+class Subscription(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='author',
         verbose_name='Автор на которого подписан'
