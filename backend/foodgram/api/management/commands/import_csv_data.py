@@ -1,9 +1,9 @@
 import csv
 import os
 
-from django.core.management import BaseCommand
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.management import BaseCommand
 
 from recipes.models import Ingredients
 
