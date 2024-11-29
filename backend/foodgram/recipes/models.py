@@ -78,6 +78,9 @@ class Recipe(models.Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
+    def get_frontend_absolute_url(self):
+        return '/recipes/{pk}/'.format(pk=self.pk)
+
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
@@ -125,7 +128,7 @@ class RecipeTag(models.Model):
 
 
 class Favorite(models.Model):
-    author = models.OneToOneField(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='recipe_favorite',
@@ -150,7 +153,7 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    author = models.OneToOneField(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='shopping_cart_recipe',

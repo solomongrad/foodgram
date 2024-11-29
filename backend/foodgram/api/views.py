@@ -127,7 +127,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
-        ).annotate(amount=Sum('amount'))
+        ).annotate(amount=Sum('amount')).order_by('ingredient__name')
         now = datetime.now()
         format_time = now.strftime('%d-%m-%Y_%H_%M_%S')
         shopping_list = (
