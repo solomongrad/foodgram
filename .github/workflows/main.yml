@@ -137,10 +137,10 @@ jobs:
           sudo docker compose -f docker-compose.production.yml up -d
           for i in {1..5}; do
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate && break || sleep 5
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_csv_data && break || sleep 5
           done
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
-          sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_csv_data
 
   send_message:
     runs-on: ubuntu-latest
