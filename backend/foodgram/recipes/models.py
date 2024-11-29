@@ -77,6 +77,7 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('-id',)
 
     def get_frontend_absolute_url(self):
         return '/recipes/{pk}/'.format(pk=self.pk)

@@ -19,7 +19,8 @@ class Command(BaseCommand):
             reader = csv.reader(file)
             for row in reader:
                 name, measurement_unit = row
-                Ingredients.objects.create(name=name,
-                                           measurement_unit=measurement_unit)
+                Ingredients.objects.update_or_create(
+                    name=name, measurement_unit=measurement_unit
+                )
 
         self.stdout.write(f'Successfully loaded data from {file_path}')
