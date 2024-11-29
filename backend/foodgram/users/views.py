@@ -9,10 +9,11 @@ from rest_framework.response import Response
 
 from api.serializers import (
     AvatarSerializer,
-    UserSerializer,
+    SubscriptionChangeSerializer,
     SubscribtionSerializer,
-    SubscriptionChangeSerializer
+    UserSerializer,
 )
+
 from .models import Subscribtion
 
 User = get_user_model()
