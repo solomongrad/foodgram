@@ -1,18 +1,18 @@
 from django.db import transaction
-from rest_framework import serializers, status
 from djoser.serializers import UserSerializer as DjoserUserSerializer
+from rest_framework import serializers, status
 
 from core.constants import RECIPES_LIMIT
 from core.serializers import Base64ImageField
 from recipes.models import (
     Favorite,
+    Ingredients,
     Recipe,
     RecipeIngredient,
     ShoppingCart,
-    Tag,
-    Ingredients
+    Tag
 )
-from users.models import User, Subscribtion
+from users.models import Subscribtion, User
 
 
 class UserSerializer(DjoserUserSerializer):
@@ -159,12 +159,13 @@ class RecipesChangeSerializer(serializers.ModelSerializer):
             )
         return data
 
-
     @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
         RecipeIngredient.objects.bulk_create(
             [RecipeIngredient(
-                ingredient=Ingredients.objects.get(id=ingredient['ingredient'].get('id').id),
+                ingredient=Ingredients.objects.get(
+                    id=ingredient['ingredient'].get('id').id
+                ),
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients]
@@ -265,4 +266,6 @@ class SubscriptionChangeSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return SubscribtionSerializer(instance.author, context={'request': self.context.get('request')}).data
+        return SubscribtionSerializer(instance.author, context={
+            'request': self.context.get('request')
+        }).data
