@@ -12,6 +12,19 @@ Foodgram - сайт для ценителей вкусной еды.
 docker compose up
 ```
 
+##Ревьюеру
+
+ссылка на сайт https://foodgramfree.sytes.net
+
+данные для админки:
+```
+solomongrad@gmail.com
+```
+
+```
+Foodgram228
+```
+
 ### Автор
 
 [zxc](https://github.com/solomongrad)
