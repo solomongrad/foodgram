@@ -153,13 +153,13 @@ class ShoppingCart(models.Model):
     author = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name='shoping_cart_recipe',
+        related_name='shopping_cart_recipe',
         verbose_name='владелец корзины покупок'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shoping_cart_recipe',
+        related_name='shopping_cart_recipe',
         verbose_name='рецепт'
     )
 

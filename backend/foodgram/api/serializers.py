@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework import serializers, status
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 
+from core.constants import RECIPES_LIMIT
 from core.serializers import Base64ImageField
 from recipes.models import (
     Favorite,
@@ -218,16 +219,22 @@ class SubscribtionSerializer(serializers.ModelSerializer):
         return obj.recipe.count()
 
     def get_recipes(self, obj):
-        limit = 10
-        recipes = obj.recipe.all()
-        if limit:
-            recipes = recipes[:int(limit)]
-        serializer = BaseRecipesSerializer(recipes, many=True, read_only=True)
+        request = self.context.get('request')
+        recipes_limit = (
+            request.GET.get('recipes_limit') if request
+            else RECIPES_LIMIT
+        )
+        recipes_queryset = obj.recipe.all()
+        if recipes_limit:
+            recipes_queryset = recipes_queryset[:int(recipes_limit)]
+        serializer = BaseRecipesSerializer(recipes_queryset,
+                                           many=True,
+                                           read_only=True)
         return serializer.data
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        return Subscribtion.objects.filter(user=user, author=obj)
+        return Subscribtion.objects.filter(user=user, author=obj).exists()
 
 
 class SubscriptionChangeSerializer(serializers.ModelSerializer):

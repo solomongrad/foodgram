@@ -28,11 +28,6 @@ class CustomUserViewSet(UserViewSet):
         permission_classes=[IsAuthenticated]
     )
     def subscribe(self, request, id):
-        # data: dict = self.get_data(request=request, id=id)
-        # serializer = SubscriptionChangeSerializer(
-        #     data={key: obj.id for key, obj in data.items()},
-        #     context={'request': request}
-        # )
         user = request.user
         author = get_object_or_404(User, id=id)
 
@@ -46,14 +41,13 @@ class CustomUserViewSet(UserViewSet):
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
-            # Subscribtion.objects.create(user=user, author=author)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = get_object_or_404(Subscribtion,
-                                         user=user,
-                                         author=author)
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription = Subscribtion.objects.filter(user=user, author=author)
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,
@@ -61,7 +55,7 @@ class CustomUserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = User.objects.filter(subscribing__user=user)
+        queryset = User.objects.filter(author__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscribtionSerializer(pages,
                                             many=True,

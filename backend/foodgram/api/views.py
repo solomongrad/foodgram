@@ -67,16 +67,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return RecipesChangeSerializer
 
     def add_recipe(self, model, user, pk):
-        if model.objects.filter(user=user, recipe__id=pk).exists():
+        if model.objects.filter(author=user, recipe__id=pk).exists():
             return Response({'errors': 'Рецепт уже добавлен!'},
                             status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=pk)
-        model.objects.create(user=user, recipe=recipe)
+        model.objects.create(author=user, recipe=recipe)
         serializer = BaseRecipesSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_recipe(self, model, user, pk):
-        object = model.objects.filter(user=user, recipe__id=pk)
+        _ = get_object_or_404(Recipe, id=pk)
+        object = model.objects.filter(author=user, recipe__id=pk)
         if object.exists():
             object.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -109,10 +110,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=False,
         permission_classes=[IsAuthenticated]
     )
-    def download_shopping_list(self, request):
+    def download_shopping_cart(self, request):
         user = request.user
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_cart_recipe__user=request.user
+            recipe__shopping_cart_recipe__author=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
@@ -123,12 +124,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             f'Список покупок для {user.first_name} {user.last_name} '
             f'от {format_time}\n'
         )
-        shopping_list += [
+        shopping_list += ''.join(
             f'· {ingredient["ingredient__name"]}'
             f' - {ingredient["amount"]} '
             f'{ingredient["ingredient__measurement_unit"]}\n'
             for ingredient in ingredients
-        ]
+        )
         shopping_list += '\nС любовью, ваш Foodgram!'
 
         filename = f'shopping_list_{user.id}_{format_time}.txt'
@@ -158,8 +159,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class RecipeRedirectView(APIView):
     """
     Вьюсет редиректа с короткой ссылки рецепта на абсолютный адрес.
-
-    Важно: редирект идёт на адрес фронта, а не /api/!
     """
 
     permission_classes = [ReadOnly]
