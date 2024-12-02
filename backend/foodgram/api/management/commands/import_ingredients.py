@@ -16,17 +16,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         file_path = os.path.join(settings.CSV_FILES_DIR, 'ingredients.csv')
         with open(file_path, mode='r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            models_list = []
-            for row in reader:
-                name, measurement_unit = row
-                if Ingredients.objects.filter(
-                    name=name, measurement_unit=measurement_unit
-                ).exists():
-                    continue
-                models_list += (Ingredients(
-                    name=name, measurement_unit=measurement_unit
-                ),)
-            Ingredients.objects.bulk_create(models_list)
+            models_list = [Ingredients(name=row[0], measurement_unit=row[1])
+                           for row in csv.reader(file)]
+            Ingredients.objects.bulk_create(models_list, ignore_conflicts=True)
 
         self.stdout.write(f'Successfully loaded data from {file_path}')

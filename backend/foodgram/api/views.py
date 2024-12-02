@@ -2,10 +2,11 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import Http404, FileResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import response, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -19,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from .filters import IngredientFilter, RecipeFilter
-from .permissions import RecipePermission
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     AvatarSerializer,
     BaseRecipesSerializer,
@@ -31,6 +32,7 @@ from .serializers import (
     TagSerializer,
     UserSerializer
 )
+from .shopping_list_def import form_shopping_list
 from recipes.models import (
     Favorite,
     Ingredients,
@@ -62,7 +64,7 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = (IsAuthenticatedOrReadOnly, RecipePermission)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
@@ -84,12 +86,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def delete_recipe_from_model(self, model, user, pk):
         if not Recipe.objects.filter(id=pk).exists():
-            raise Http404('Такого рецепта не существует.')
-        object = model.objects.filter(author=user, recipe__id=pk)
-        if object.exists():
-            object.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        raise ValidationError('Вы уже удалили этот рецепт!')
+            raise ValidationError(f'Рецепта с id={pk} не существует.')
+        object = get_object_or_404(model, author=user, recipe__id=pk)
+        object.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -120,25 +120,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         user = request.user
         ingredients = RecipeIngredient.objects.filter(
-            recipe__shopping_cart_recipe__author=request.user
+            recipe__shopping_carts__author=user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount')).order_by('ingredient__name')
-        now = datetime.now()
-        format_time = now.strftime('%d-%m-%Y_%H_%M_%S')
-        shopping_list = (
-            f'Список покупок для {user.first_name} {user.last_name} '
-            f'от {format_time}\n'
-        )
-        shopping_list += ''.join(
-            f'· {ingredient["ingredient__name"]}'
-            f' - {ingredient["amount"]} '
-            f'{ingredient["ingredient__measurement_unit"]}\n'
-            for ingredient in ingredients
-        )
-        shopping_list += '\nС любовью, ваш Foodgram!'
-
+        format_time = datetime.now().strftime('%d-%m-%Y_%H_%M_%S')
+        recipe_names = [
+            shopping_cart.recipe.name
+            for shopping_cart in ShoppingCart.objects.filter(author=user)
+        ]
+        shopping_list = form_shopping_list(user=user,
+                                           ingredients=ingredients,
+                                           recipe_names=recipe_names,
+                                           format_time=format_time)
         filename = f'shopping_list_{user.id}_{format_time}.txt'
         return FileResponse(shopping_list,
                             content_type='text/plain',
@@ -147,16 +142,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk: int):
-        recipe = self.get_object()
-
-        url = f'{request.scheme}://{request.get_host()}'
+        url = request.build_absolute_uri(
+            location=None
+        ).replace(request.get_full_path(), '')
         return Response(
-            {'short-link': f'{url}/s/{recipe.short_link}'},
+            {'short-link': url + reverse('recipe-redirect',
+                                         args=(pk,))},
             status=status.HTTP_200_OK
         )
 
 
-class MyUserViewSet(UserViewSet):
+class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
@@ -172,22 +168,17 @@ class MyUserViewSet(UserViewSet):
         author = get_object_or_404(User, id=id)
 
         if request.method == 'POST':
-            data = {
-                'user': user.id,
-                'author': author.id
-            }
-            serializer = SubscriptionChangeSerializer(
-                data=data,
+            serializer = SubscriptionSerializer(
+                author,
+                data=request.data,
                 context={'request': request}
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            Subscription.objects.create(user=user,
+                                        author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = Subscription.objects.filter(user=user, author=author)
-        if subscription.exists():
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        get_object_or_404(Subscription, user=user, author=author).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
