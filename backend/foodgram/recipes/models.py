@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from core.constants import MIN_COOKING_TIME, MIN_INGREDIENTS_PER_RECIPE
 from core.utils import generate_short_link
 
 User = get_user_model()
@@ -16,12 +17,13 @@ class Tag(models.Model):
     slug = models.SlugField(
         unique=True,
         max_length=50,
-        verbose_name='slug'
+        verbose_name='слаг'
     )
 
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+        ordering = ('id',)
 
     def __str__(self):
         return self.name
@@ -40,6 +42,7 @@ class Ingredients(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ('name',)
 
     def __str__(self):
         return self.name
@@ -49,60 +52,66 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='recipe'
+        related_name='recipes'
     )
-    name = models.CharField(max_length=256)
-    image = models.ImageField(upload_to='posts/')
-    text = models.TextField()
+    name = models.CharField(max_length=256,
+                            verbose_name='Название')
+    image = models.ImageField(upload_to='posts/',
+                              verbose_name='Изображение')
+    text = models.TextField(verbose_name='Описание')
     ingredients = models.ManyToManyField(
         Ingredients,
-        related_name='recipe',
-        through='RecipeIngredient'
+        related_name='recipes',
+        through='RecipeIngredient',
+        verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
         Tag,
-        related_name='recipe'
+        related_name='recipes',
+        verbose_name='Теги'
     )
-    cooking_time = models.PositiveSmallIntegerField(
+    cooking_time = models.PositiveIntegerField(
         validators=(
-            MinValueValidator(1),
-            MaxValueValidator(1000)
-        )
+            MinValueValidator(MIN_COOKING_TIME),
+        ),
+        verbose_name='Время приготовления'
     )
     short_link = models.CharField(
         verbose_name='Короткая ссылка', default=generate_short_link,
-        max_length=6
+        unique=True, max_length=6
     )
+    created_at = models.DateTimeField(auto_now_add=True,
+                                      verbose_name='время создания рецепта')
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('-id',)
-
-    def get_frontend_absolute_url(self):
-        return '/recipes/{pk}/'.format(pk=self.pk)
+        ordering = ('-created_at',)
 
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe_ingredient')
+        related_name='recipe_ingredients')
     ingredient = models.ForeignKey(
         Ingredients,
         on_delete=models.CASCADE,
-        related_name='recipe_ingredient')
+        related_name='recipe_ingredients')
     amount = models.PositiveSmallIntegerField(
-        default=1,
+        default=MIN_INGREDIENTS_PER_RECIPE,
         validators=(MinValueValidator(
-            1, message='Мин. количество ингридиентов 1'
+            MIN_INGREDIENTS_PER_RECIPE,
+            message=(
+                f'Мин. количество ингридиентов {MIN_INGREDIENTS_PER_RECIPE}'
+            )
         ),),
         verbose_name='Количество',)
 
     class Meta:
-        verbose_name = 'Количество ингредиента'
-        verbose_name_plural = 'Количество ингредиентов'
-        ordering = ['-id']
+        verbose_name = 'Соотношение ингредиента и рецепта'
+        verbose_name_plural = 'Соотношение ингредиентов и рецепта'
+        ordering = ('-id',)
         constraints = (
             models.UniqueConstraint(
                 fields=('recipe', 'ingredient'),
@@ -111,68 +120,39 @@ class RecipeIngredient(models.Model):
         )
 
 
-class RecipeTag(models.Model):
-    tag = models.ForeignKey(
-        Tag,
-        on_delete=models.CASCADE,
-        related_name='recipe_tag'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='recipe_tag'
-    )
-
-    class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
-
-
-class Favorite(models.Model):
+class BaseCartOrFavorite(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='recipe_favorite',
-        verbose_name='владелец избранного'
+        verbose_name='владелец'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='recipe_favorite',
         verbose_name='рецепт'
     )
+
+    class Meta:
+        abstract = True
+        constraints = (
+            models.UniqueConstraint(
+                fields=('author', 'recipe'),
+                name='unique recipe',
+            ),
+        )
+
+
+class Favorite(BaseCartOrFavorite):
 
     class Meta:
         verbose_name = 'Избранный рецепт'
         verbose_name_plural = 'Избранные рецепты'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('author', 'recipe'),
-                name='unique recipe in favorite',
-            ),
-        )
+        default_related_name = 'favorite_recipes'
 
 
-class ShoppingCart(models.Model):
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping_cart_recipe',
-        verbose_name='владелец корзины покупок'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='shopping_cart_recipe',
-        verbose_name='рецепт'
-    )
+class ShoppingCart(BaseCartOrFavorite):
 
     class Meta:
         verbose_name = 'Рецепт из корзины'
         verbose_name_plural = 'Рецепты из корзины'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('author', 'recipe'),
-                name='unique recipe in shopping cart',
-            ),
-        )
+        default_related_name = 'shopping_cart_recipe'

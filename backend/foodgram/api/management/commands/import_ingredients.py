@@ -15,12 +15,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         file_path = os.path.join(settings.CSV_FILES_DIR, 'ingredients.csv')
-        with open(file_path, mode="r", encoding="utf-8") as file:
+        with open(file_path, mode='r', encoding='utf-8') as file:
             reader = csv.reader(file)
+            models_list = []
             for row in reader:
                 name, measurement_unit = row
-                Ingredients.objects.update_or_create(
+                if Ingredients.objects.filter(
                     name=name, measurement_unit=measurement_unit
-                )
+                ).exists():
+                    continue
+                models_list += (Ingredients(
+                    name=name, measurement_unit=measurement_unit
+                ),)
+            Ingredients.objects.bulk_create(models_list)
 
         self.stdout.write(f'Successfully loaded data from {file_path}')
