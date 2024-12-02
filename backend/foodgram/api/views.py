@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import Http404, FileResponse
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -18,6 +18,16 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
+from recipes.models import (
+    Favorite,
+    Ingredients,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag
+)
+from users.models import Subscription
+
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import RecipePermission
 from .serializers import (
@@ -31,15 +41,6 @@ from .serializers import (
     TagSerializer,
     UserSerializer
 )
-from recipes.models import (
-    Favorite,
-    Ingredients,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag
-)
-from users.models import Subscription
 
 User = get_user_model()
 
@@ -110,8 +111,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         if request.method == 'POST':
-            return self.add_recipe_to_model(model=Favorite, user=request.user, pk=pk)
-        return self.delete_recipe_from_model(model=Favorite, user=request.user, pk=pk)
+            return self.add_recipe_to_model(model=Favorite,
+                                            user=request.user,
+                                            pk=pk)
+        return self.delete_recipe_from_model(model=Favorite,
+                                             user=request.user,
+                                             pk=pk)
 
     @action(
         detail=False,

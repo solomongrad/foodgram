@@ -58,6 +58,7 @@ class IngredientsAdmin(admin.ModelAdmin):
     def added_in_recipe(self, ingredient):
         return ingredient.recipe.count()
 
+
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = (
@@ -71,6 +72,7 @@ class TagAdmin(admin.ModelAdmin):
     @display(description='Количество рецептов с этим тегом')
     def recipes_with_this_tag(self, tag):
         return tag.recipe.count()
+
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
