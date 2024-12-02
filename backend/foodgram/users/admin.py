@@ -24,6 +24,7 @@ class UserAdmin(UserAdmin):
         'subscribers'
     )
     list_filter = ('first_name',)
+    search_fields = ('first_name', 'email',)
 
     @display(description='Количество написанных рецептов')
     def recipes_wrote(self, user):

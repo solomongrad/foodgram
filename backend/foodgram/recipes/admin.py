@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import display
+from django.http import FileResponse
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -26,6 +27,7 @@ class RecipeAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('added_in_favorites',)
     list_filter = ('author', 'tags',)
+    search_fields = ('name', 'author',)
 
     @display(description='Количество в избранных')
     def added_in_favorites(self, recipe):
@@ -33,15 +35,15 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Ингредиенты')
     def get_ingredients(self, recipe):
-        return mark_safe(recipe.ingredients)
+        return [f'{ingredient}\n' for ingredient in recipe.ingredients.filter(recipes=recipe)]
 
     @display(description='Изображение')
     def get_image(self, recipe):
-        return mark_safe(recipe.image)
+        return mark_safe(f'<img src={recipe.image.url} width="75" height="55"')
 
     @display(description='Теги')
     def get_tags(self, recipe):
-        return mark_safe(recipe.tags)
+        return [f'{tag}\n' for tag in recipe.tags.filter(recipes=recipe)]
 
 
 @admin.register(Ingredients)
@@ -53,6 +55,7 @@ class IngredientsAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('added_in_recipe',)
     list_filter = ('measurement_unit',)
+    search_fields = ('name', 'measurement_unit',)
 
     @display(description='Количество рецептов с этим ингредиентом')
     def added_in_recipe(self, ingredient):

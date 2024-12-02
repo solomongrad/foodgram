@@ -22,8 +22,7 @@ class UserSerializer(DjoserUserSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name',
-                  'last_name', 'is_subscribed', 'avatar')
+        fields = (*DjoserUserSerializer.Meta.fields, 'is_subscribed', 'avatar')
 
     def get_is_subscribed(self, author):
         user = self.context.get('request').user
@@ -52,13 +51,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-    def validate(self, data):
-        if data['amount'] < 1:
-            raise serializers.ValidationError(
-                'Количество/объем ингредиента должен быть больше или равен 1!'
-            )
-        return data
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -168,9 +160,7 @@ class RecipesChangeSerializer(BaseRecipesSerializer):
     def create_ingredients_amounts(self, ingredients, recipe):
         RecipeIngredient.objects.bulk_create(
             (RecipeIngredient(
-                ingredient=Ingredients.objects.get(
-                    id=ingredient['ingredient'].get('id').id
-                ),
+                ingredient_id=ingredient['ingredient']['id'].id,
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients)
@@ -219,6 +209,21 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    def validate(self, data):
+        author = self.instance
+        user = self.context.get('request').user
+        if Subscription.objects.filter(
+            author=author, user=user
+        ).exists():
+            raise serializers.ValidationError(
+                detail='Вы уже подписаны на этого пользователя!',
+            )
+        if user == author:
+            raise serializers.ValidationError(
+                detail='Вы не можете подписаться на самого себя!',
+            )
+        return data
+
     def get_recipes_count(self, user):
         return user.recipes.count()
 
@@ -238,10 +243,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                      'целочисленные значения.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-        serializer = BaseRecipesSerializer(recipes_queryset,
-                                           many=True,
-                                           read_only=True)
-        return serializer.data
+        return BaseRecipesSerializer(recipes_queryset,
+                                     many=True,
+                                     read_only=True).data
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
