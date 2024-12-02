@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib.admin import display
-from django.http import FileResponse
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -35,7 +34,10 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Ингредиенты')
     def get_ingredients(self, recipe):
-        return [f'{ingredient}\n' for ingredient in recipe.ingredients.filter(recipes=recipe)]
+        return [
+            f'{ingredient}\n'
+            for ingredient in recipe.ingredients.filter(recipes=recipe)
+        ]
 
     @display(description='Изображение')
     def get_image(self, recipe):

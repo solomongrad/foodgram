@@ -250,34 +250,3 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
         return Subscription.objects.filter(user=user, author=obj).exists()
-
-
-class SubscriptionChangeSerializer(serializers.ModelSerializer):
-    """Сериалайзер для фолловеров. Только на запись."""
-
-    author = UserSerializer
-    user = UserSerializer
-
-    class Meta:
-        model = Subscription
-        fields = ('author', 'user')
-
-    def validate(self, data):
-        author = data['author']
-        user = data['user']
-        if Subscription.objects.filter(
-            author=author, user=user
-        ).exists():
-            raise serializers.ValidationError(
-                detail='Вы уже подписаны на этого пользователя!',
-            )
-        if user == author:
-            raise serializers.ValidationError(
-                detail='Вы не можете подписаться на самого себя!',
-            )
-        return data
-
-    def to_representation(self, instance):
-        return SubscriptionSerializer(instance.author, context={
-            'request': self.context.get('request')
-        }).data

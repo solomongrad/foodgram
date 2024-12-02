@@ -37,20 +37,11 @@ from .serializers import (
     IngredientsSerializer,
     RecipesChangeSerializer,
     RecipesReadSerializer,
-    SubscriptionChangeSerializer,
     SubscriptionSerializer,
     TagSerializer,
     UserSerializer
 )
-from recipes.models import (
-    Favorite,
-    Ingredients,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag
-)
-from users.models import Subscription
+from .shopping_list_def import form_shopping_list
 
 User = get_user_model()
 
