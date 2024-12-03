@@ -7,7 +7,7 @@ from .constants import (
     MAX_LENGTH_MEASUREMENT_UNIT,
     MAX_LENGTH_TAG,
     MIN_COOKING_TIME,
-    MIN_INGREDIENTS_PER_RECIPE
+    MIN_INGREDIENTS
 )
 
 User = get_user_model()
@@ -106,11 +106,11 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name='recipe_ingredients')
     amount = models.PositiveSmallIntegerField(
-        default=MIN_INGREDIENTS_PER_RECIPE,
+        default=MIN_INGREDIENTS,
         validators=(MinValueValidator(
-            MIN_INGREDIENTS_PER_RECIPE,
+            MIN_INGREDIENTS,
             message=(
-                f'Мин. количество ингридиентов {MIN_INGREDIENTS_PER_RECIPE}'
+                f'Мин. количество ингридиентов {MIN_INGREDIENTS}'
             )
         ),),
         verbose_name='Количество',)
