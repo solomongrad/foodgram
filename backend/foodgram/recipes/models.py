@@ -144,7 +144,7 @@ class BaseCartOrFavorite(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('author', 'recipe'),
-                name='unique recipe if favorite',
+                name='unique recipe in favorite',
             ),
         )
 
@@ -169,3 +169,4 @@ class ShoppingCart(BaseCartOrFavorite):
                 name='unique recipe in shopping cart',
             ),
         )
+        # ревьюверу: не знаю как иначе переопределить параметр name

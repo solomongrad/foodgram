@@ -78,7 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def add_recipe_to_model(self, model, user, pk):
         if model.objects.filter(author=user, recipe__id=pk).exists():
-            raise ValidationError('Рецепт уже добавлен!')
+            raise ValidationError('Вы уже добавили этот рецепт ранее!')
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(author=user, recipe=recipe)
         return Response(BaseRecipesSerializer(recipe).data,
@@ -87,8 +87,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_recipe_from_model(self, model, user, pk):
         if not Recipe.objects.filter(id=pk).exists():
             raise ValidationError(f'Рецепта с id={pk} не существует.')
-        object = get_object_or_404(model, author=user, recipe__id=pk)
-        object.delete()
+        get_object_or_404(model, author=user, recipe__id=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -129,16 +128,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount')).order_by('ingredient__name')
-        format_time = datetime.now().strftime('%d-%m-%Y_%H_%M_%S')
         recipe_names = [
             shopping_cart.recipe.name
             for shopping_cart in ShoppingCart.objects.filter(author=user)
         ]
         shopping_list = form_shopping_list(user=user,
                                            ingredients=ingredients,
-                                           recipe_names=recipe_names,
-                                           format_time=format_time)
-        filename = f'shopping_list_{user.id}_{format_time}.txt'
+                                           recipe_names=recipe_names)
+        filename = (f'shopping_list_{user.id}_'
+                    f'{datetime.now().strftime("%d-%m-%Y_%H_%M_%S")}.txt')
         return FileResponse(shopping_list,
                             content_type='text/plain',
                             as_attachment=True,
@@ -146,14 +144,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk: int):
-        url = request.build_absolute_uri(
-            location=None
-        ).replace(request.get_full_path(), '')
-        return Response(
-            {'short-link': url + reverse('recipe-redirect',
-                                         args=(pk,))},
-            status=status.HTTP_200_OK
-        )
+        if Recipe.objects.filter(id=pk).exists():
+            url = request.build_absolute_uri(
+                location=None
+            ).replace(request.get_full_path(), '')
+            return Response(
+                {'short-link': url + reverse('recipe:recipe-redirect',
+                                             args=(pk,))},
+                status=status.HTTP_200_OK
+            )
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -170,19 +169,29 @@ class UserViewSet(DjoserUserViewSet):
     def subscribe(self, request, id):
         user = request.user
         author = get_object_or_404(User, id=id)
+        if author == user:
+            raise ValidationError('Вы не можете подписаться на самого себя!')
 
-        if request.method == 'POST':
-            serializer = SubscriptionSerializer(
-                author,
-                data=request.data,
-                context={'request': request}
+        if request.method == 'DELETE':
+            get_object_or_404(Subscription, user=user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        if Subscription.objects.filter(author=author, user=user).exists():
+            raise ValidationError(
+                detail='Вы уже подписаны на этого пользователя!',
             )
-            serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=user,
-                                        author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        get_object_or_404(Subscription, user=user, author=author).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        Subscription.objects.create(user=user,
+                                    author=author)
+        # ревьюверу: я искренне не имею ни малейшего понятия, как вернуть
+        # такой же ответ без сериалайзера, единственное, что приходит в голову,
+        # это сделать это вручную, но это не вариант.
+        serializer = SubscriptionSerializer(
+            author,
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,

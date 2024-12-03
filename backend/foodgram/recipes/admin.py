@@ -34,10 +34,11 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Ингредиенты')
     def get_ingredients(self, recipe):
-        return [
-            f'{ingredient}\n'
-            for ingredient in recipe.ingredients.filter(recipes=recipe)
-        ]
+        return mark_safe(''.join(
+            f'{recipe_ingredient.ingredient} - {recipe_ingredient.amount}'
+            f'{recipe_ingredient.ingredient.measurement_unit}<br>'
+            for recipe_ingredient in recipe.recipe_ingredients.filter(recipe=recipe)
+        ))
 
     @display(description='Изображение')
     def get_image(self, recipe):
@@ -61,7 +62,7 @@ class IngredientsAdmin(admin.ModelAdmin):
 
     @display(description='Количество рецептов с этим ингредиентом')
     def added_in_recipe(self, ingredient):
-        return ingredient.recipe.count()
+        return ingredient.recipes.count()
 
 
 @admin.register(Tag)
@@ -76,7 +77,7 @@ class TagAdmin(admin.ModelAdmin):
 
     @display(description='Количество рецептов с этим тегом')
     def recipes_with_this_tag(self, tag):
-        return tag.recipe.count()
+        return tag.recipes.count()
 
 
 @admin.register(ShoppingCart)

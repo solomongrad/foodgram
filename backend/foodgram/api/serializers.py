@@ -4,6 +4,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from core.serializers import Base64ImageField
+from recipes.constants import MIN_INGREDIENTS
 from recipes.models import (
     Favorite,
     Ingredients,
@@ -51,6 +52,13 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
+
+    def validate_amount(self, value):
+        if not value >= MIN_INGREDIENTS:
+            raise serializers.ValidationError(
+                f'Мин. количество ингридиентов {MIN_INGREDIENTS}'
+            )
+        return value
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -190,39 +198,21 @@ class RecipesChangeSerializer(BaseRecipesSerializer):
         return RecipesReadSerializer(instance, context=self.context).data
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(UserSerializer):
     recipes_count = serializers.SerializerMethodField(
         method_name='get_recipes_count'
     )
     recipes = serializers.SerializerMethodField(
         method_name='get_recipes'
     )
-    is_subscribed = serializers.SerializerMethodField(
-        method_name='get_is_subscribed'
-    )
+
 
     class Meta:
         model = User
         fields = (
-            'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count', 'avatar'
+            *UserSerializer.Meta.fields, 'recipes', 'recipes_count',
         )
         read_only_fields = fields
-
-    def validate(self, data):
-        author = self.instance
-        user = self.context.get('request').user
-        if Subscription.objects.filter(
-            author=author, user=user
-        ).exists():
-            raise serializers.ValidationError(
-                detail='Вы уже подписаны на этого пользователя!',
-            )
-        if user == author:
-            raise serializers.ValidationError(
-                detail='Вы не можете подписаться на самого себя!',
-            )
-        return data
 
     def get_recipes_count(self, user):
         return user.recipes.count()
@@ -238,15 +228,9 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             try:
                 recipes_queryset = recipes_queryset[:int(recipes_limit)]
             except ValueError:
-                return Response(
-                    {'message': 'recipes_limit принимает только '
-                     'целочисленные значения.'},
-                    status=status.HTTP_400_BAD_REQUEST
+                raise serializers.ValidationError(
+                    'recipes_limit принимает только целочисленные значения.'
                 )
         return BaseRecipesSerializer(recipes_queryset,
                                      many=True,
                                      read_only=True).data
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        return Subscription.objects.filter(user=user, author=obj).exists()
