@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def form_shopping_list(user, ingredients, recipe_names):
     format_time = datetime.now().strftime('%d-%m-%Y_%H_%M_%S')
     shopping_list = [

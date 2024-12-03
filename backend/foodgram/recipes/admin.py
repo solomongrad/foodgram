@@ -37,7 +37,9 @@ class RecipeAdmin(admin.ModelAdmin):
         return mark_safe(''.join(
             f'{recipe_ingredient.ingredient} - {recipe_ingredient.amount}'
             f'{recipe_ingredient.ingredient.measurement_unit}<br>'
-            for recipe_ingredient in recipe.recipe_ingredients.filter(recipe=recipe)
+            for recipe_ingredient in recipe.recipe_ingredients.filter(
+                recipe=recipe
+            )
         ))
 
     @display(description='Изображение')

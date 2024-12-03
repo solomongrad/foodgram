@@ -1,7 +1,6 @@
 from django.db import transaction
 from djoser.serializers import UserSerializer as DjoserUserSerializer
-from rest_framework import serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers
 
 from core.serializers import Base64ImageField
 from recipes.constants import MIN_INGREDIENTS
@@ -205,7 +204,6 @@ class SubscriptionSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField(
         method_name='get_recipes'
     )
-
 
     class Meta:
         model = User
