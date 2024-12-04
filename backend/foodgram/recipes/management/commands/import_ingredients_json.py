@@ -20,7 +20,7 @@ class Command(BaseCommand):
             models_list = [Ingredients(
                 name=row['name'], measurement_unit=row['measurement_unit']
             )
-                           for row in json.load(file)]
+                for row in json.load(file)]
             Ingredients.objects.bulk_create(models_list, ignore_conflicts=True)
 
         self.stdout.write(f'Successfully loaded data from {file_path}')
