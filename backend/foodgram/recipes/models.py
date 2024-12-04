@@ -1,3 +1,5 @@
+from re import sub as re_sub
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -139,14 +141,29 @@ class BaseCartOrFavorite(models.Model):
         verbose_name='рецепт'
     )
 
-    class Meta:
-        abstract = True
-        constraints = (
+    @staticmethod
+    def to_snake_case(text: str) -> str:
+        """Преобразовывает CamelCase в snake_case.
+
+        Добавляет нижнее подчеркивание перед заглавными буквами, кроме первой
+        буквы строки. После этого превращает все буквы в строчные и
+        возвращает строку.
+        """
+
+        return re_sub(r'(?<!^)(?=[A-Z])', '_', text).lower()
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        cls.Meta.constraints = [
             models.UniqueConstraint(
                 fields=('author', 'recipe'),
-                name='%(_class)s_unique_recipe',
-            ),
-        )
+                name='unique_' + cls.to_snake_case(cls.__qualname__)
+            )
+        ]
+
+
+    class Meta:
+        abstract = True
 
 
 class Favorite(BaseCartOrFavorite):
@@ -163,10 +180,3 @@ class ShoppingCart(BaseCartOrFavorite):
         verbose_name = 'Рецепт из корзины'
         verbose_name_plural = 'Рецепты из корзины'
         default_related_name = 'shopping_carts'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('author', 'recipe'),
-                name='unique recipe in shopping cart.',
-            ),
-        )
-        # ревьюверу: не знаю как иначе переопределить параметр name
