@@ -14,7 +14,8 @@ class Command(BaseCommand):
     """Класс загрузки базы данных ингредиентов."""
 
     def handle(self, *args, **kwargs):
-        file_path = os.path.join(settings.IMPORTING_FILES_DIR, 'ingredients.csv')
+        file_path = os.path.join(settings.IMPORTING_FILES_DIR,
+                                 'ingredients.csv')
         with open(file_path, mode='r', encoding='utf-8') as file:
             models_list = [Ingredients(name=row[0], measurement_unit=row[1])
                            for row in csv.reader(file)]
