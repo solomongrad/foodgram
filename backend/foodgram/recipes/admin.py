@@ -34,9 +34,9 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Ингредиенты')
     def get_ingredients(self, recipe):
-        return mark_safe(''.join(
+        return mark_safe('<br>'.join(
             f'{recipe_ingredient.ingredient} - {recipe_ingredient.amount}'
-            f'{recipe_ingredient.ingredient.measurement_unit}<br>'
+            f'{recipe_ingredient.ingredient.measurement_unit}'
             for recipe_ingredient in recipe.recipe_ingredients.filter(
                 recipe=recipe
             )
@@ -48,7 +48,8 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @display(description='Теги')
     def get_tags(self, recipe):
-        return [f'{tag}\n' for tag in recipe.tags.filter(recipes=recipe)]
+        return mark_safe('<br>'.join(f'{tag}' for tag in
+                         recipe.tags.filter(recipes=recipe)))
 
 
 @admin.register(Ingredients)

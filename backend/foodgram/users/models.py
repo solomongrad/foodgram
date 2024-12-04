@@ -19,6 +19,7 @@ class User(AbstractUser):
                               max_length=254, unique=True)
     avatar = models.ImageField(
         verbose_name='Аватар пользователя',
+        upload_to='avatars/',
         blank=True,
         help_text=(
             'Аватар пользователя, по умолчанию загружается другая картинка'
@@ -30,14 +31,17 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('date_joined',)
 
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+
 
 class Subscription(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions_author',
+        User, on_delete=models.CASCADE, related_name='subscribers',
         verbose_name='Автор на которого подписан'
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions_user',
+        User, on_delete=models.CASCADE, related_name='subscriptions',
         verbose_name='Подписчик'
     )
 

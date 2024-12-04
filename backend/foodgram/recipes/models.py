@@ -9,7 +9,7 @@ from .constants import (
     MAX_LENGTH_MEASUREMENT_UNIT,
     MAX_LENGTH_TAG,
     MIN_COOKING_TIME,
-    MIN_INGREDIENTS
+    MIN_RECIPE_INGREDIENT_AMOUNT
 )
 
 User = get_user_model()
@@ -69,7 +69,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(max_length=256,
                             verbose_name='Название')
-    image = models.ImageField(upload_to='posts/',
+    image = models.ImageField(upload_to='recipes/',
                               verbose_name='Изображение')
     text = models.TextField(verbose_name='Описание')
     ingredients = models.ManyToManyField(
@@ -108,11 +108,10 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name='recipe_ingredients')
     amount = models.PositiveSmallIntegerField(
-        default=MIN_INGREDIENTS,
         validators=(MinValueValidator(
-            MIN_INGREDIENTS,
+            MIN_RECIPE_INGREDIENT_AMOUNT,
             message=(
-                f'Мин. количество ингридиентов {MIN_INGREDIENTS}'
+                f'Слишком мало ингридиента. Минимум: {MIN_RECIPE_INGREDIENT_AMOUNT}.'
             )
         ),),
         verbose_name='Количество',)
@@ -141,28 +140,15 @@ class BaseCartOrFavorite(models.Model):
         verbose_name='рецепт'
     )
 
-    @staticmethod
-    def to_snake_case(text: str) -> str:
-        """Преобразовывает CamelCase в snake_case.
-
-        Добавляет нижнее подчеркивание перед заглавными буквами, кроме первой
-        буквы строки. После этого превращает все буквы в строчные и
-        возвращает строку.
-        """
-
-        return re_sub(r'(?<!^)(?=[A-Z])', '_', text).lower()
-
-    def __init_subclass__(cls, **kwargs) -> None:
-        super().__init_subclass__(**kwargs)
-        cls.Meta.constraints = [
-            models.UniqueConstraint(
-                fields=('author', 'recipe'),
-                name='unique_' + cls.to_snake_case(cls.__qualname__)
-            )
-        ]
-
     class Meta:
         abstract = True
+        constraints = (
+            models.UniqueConstraint(
+                fields=('author', 'recipe'),
+                name='unique_%(class)s_unique_recipe',
+            ),
+        )
+
 
 
 class Favorite(BaseCartOrFavorite):

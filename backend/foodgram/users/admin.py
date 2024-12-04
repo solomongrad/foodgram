@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import display
 from django.contrib.auth.admin import UserAdmin
+from django.utils.safestring import mark_safe
 
 from .models import Subscription, User
 
@@ -11,9 +12,8 @@ class UserAdmin(UserAdmin):
         'username',
         'id',
         'email',
-        'first_name',
-        'last_name',
-        'avatar',
+        'get_full_name',
+        'get_avatar',
         'recipes_wrote',
         'number_of_subscriptions',
         'subscribers'
@@ -24,7 +24,11 @@ class UserAdmin(UserAdmin):
         'subscribers'
     )
     list_filter = ('first_name',)
-    search_fields = ('first_name', 'email', 'name',)
+    search_fields = ('first_name', 'email', 'first_name',)
+
+    @display(description='Имя фамилия')
+    def get_full_name(self, user):
+        return user.__str__()
 
     @display(description='Количество написанных рецептов')
     def recipes_wrote(self, user):
@@ -32,11 +36,18 @@ class UserAdmin(UserAdmin):
 
     @display(description='Количество подписок')
     def number_of_subscriptions(self, user):
-        return user.subscriptions_user.count()
+        return user.subscriptions.count()
 
     @display(description='Количество подписчиков')
     def subscribers(self, user):
-        return user.subscriptions_auhtor.count()
+        return user.subscribers.count()
+
+    @display(description='Изображение')
+    def get_avatar(self, user):
+        try:
+            return mark_safe(f'<img src={user.avatar.url} width="75" height="55"')
+        except ValueError:
+            return 'Изображение отсутствует'
 
 
 @admin.register(Subscription)

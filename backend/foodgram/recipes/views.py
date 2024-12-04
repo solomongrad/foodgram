@@ -5,6 +5,6 @@ from .models import Recipe
 
 
 def get_redirect_short_link(request, pk):
-    if Recipe.objects.filter(id=pk):
+    if Recipe.objects.filter(id=pk).exists():
         return redirect(f'/recipes/{pk}/')
-    raise ValidationError('Такого рецепта не существует!')
+    raise ValidationError('Указанного рецепта не существет!')

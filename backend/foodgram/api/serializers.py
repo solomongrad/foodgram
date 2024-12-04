@@ -3,7 +3,7 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from core.serializers import Base64ImageField
-from recipes.constants import MIN_INGREDIENTS
+from recipes.constants import MIN_RECIPE_INGREDIENT_AMOUNT
 from recipes.models import (
     Favorite,
     Ingredients,
@@ -47,17 +47,11 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
+    amount = serializers.IntegerField(min_value=MIN_RECIPE_INGREDIENT_AMOUNT)
 
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-    def validate_amount(self, value):
-        if not value >= MIN_INGREDIENTS:
-            raise serializers.ValidationError(
-                f'Мин. количество ингридиентов {MIN_INGREDIENTS}'
-            )
-        return value
 
 
 class IngredientsSerializer(serializers.ModelSerializer):

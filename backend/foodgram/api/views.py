@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -78,7 +79,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def add_recipe_to_model(self, model, user, pk):
         if model.objects.filter(author=user, recipe__id=pk).exists():
-            raise ValidationError('Вы уже добавили этот рецепт ранее!')
+            raise ValidationError('Этот рецепт уже был добавлен ранее!')
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(author=user, recipe=recipe)
         return Response(BaseRecipesSerializer(recipe).data,
@@ -144,15 +145,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk: int):
-        if Recipe.objects.filter(id=pk).exists():
-            url = request.build_absolute_uri(
+        get_object_or_404(Recipe, id=pk)
+        return Response(
+            {'short-link': request.build_absolute_uri(
                 location=None
-            ).replace(request.get_full_path(), '')
-            return Response(
-                {'short-link': url + reverse('recipe:recipe-redirect',
-                                             args=(pk,))},
-                status=status.HTTP_200_OK
-            )
+            ).replace(
+                request.get_full_path(), ''
+            ) + reverse('recipe:recipe-redirect', args=(pk,))},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -170,18 +171,18 @@ class UserViewSet(DjoserUserViewSet):
         user = request.user
         author = get_object_or_404(User, id=id)
         if author == user:
-            raise ValidationError('Вы не можете подписаться на самого себя!')
+            raise ValidationError('Подписаться на самого себя невозможно.')
 
         if request.method == 'DELETE':
             get_object_or_404(Subscription, user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        if Subscription.objects.filter(author=author, user=user).exists():
+        try:
+            Subscription.objects.create(user=user, author=author)
+        except IntegrityError:
             raise ValidationError(
                 detail='Вы уже подписаны на этого пользователя!',
             )
-        Subscription.objects.create(user=user,
-                                    author=author)
         # ревьюверу: я искренне не имею ни малейшего понятия, как вернуть
         # такой же ответ без сериалайзера, единственное, что приходит в голову,
         # это сделать это вручную, но это не вариант.
@@ -199,7 +200,7 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = User.objects.filter(subscriptions_author__user=user)
+        queryset = User.objects.filter(subscribers__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(pages,
                                             many=True,
