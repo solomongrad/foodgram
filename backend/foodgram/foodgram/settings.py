@@ -109,7 +109,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-CSV_FILES_DIR = os.path.join(BASE_DIR, 'data')
+CSV_JSON_FILES_DIR = os.path.join(BASE_DIR, 'data')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
