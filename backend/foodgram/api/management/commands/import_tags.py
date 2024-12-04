@@ -14,7 +14,7 @@ class Command(BaseCommand):
     """Класс загрузки базы данных тегов."""
 
     def handle(self, *args, **kwargs):
-        file_path = os.path.join(settings.CSV_FILES_DIR, 'tags.csv')
+        file_path = os.path.join(settings.IMPORTING_FILES_DIR, 'tags.csv')
         with open(file_path, mode='r', encoding='utf-8') as file:
             models_list = [Tag(name=row[0], slug=row[1])
                            for row in csv.reader(file)]

@@ -144,7 +144,7 @@ class BaseCartOrFavorite(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('author', 'recipe'),
-                name='unique recipe in favorite.',
+                name='%(_class)s_unique_recipe',
             ),
         )
 
