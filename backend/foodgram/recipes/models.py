@@ -1,5 +1,3 @@
-from re import sub as re_sub
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -111,7 +109,8 @@ class RecipeIngredient(models.Model):
         validators=(MinValueValidator(
             MIN_RECIPE_INGREDIENT_AMOUNT,
             message=(
-                f'Слишком мало ингридиента. Минимум: {MIN_RECIPE_INGREDIENT_AMOUNT}.'
+                'Слишком мало ингридиента. Минимум: '
+                f'{MIN_RECIPE_INGREDIENT_AMOUNT}.'
             )
         ),),
         verbose_name='Количество',)
@@ -148,7 +147,6 @@ class BaseCartOrFavorite(models.Model):
                 name='unique_%(class)s_unique_recipe',
             ),
         )
-
 
 
 class Favorite(BaseCartOrFavorite):

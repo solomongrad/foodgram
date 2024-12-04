@@ -45,7 +45,9 @@ class UserAdmin(UserAdmin):
     @display(description='Изображение')
     def get_avatar(self, user):
         try:
-            return mark_safe(f'<img src={user.avatar.url} width="75" height="55"')
+            return mark_safe(
+                f'<img src={user.avatar.url} width="75" height="55"'
+            )
         except ValueError:
             return 'Изображение отсутствует'
 
