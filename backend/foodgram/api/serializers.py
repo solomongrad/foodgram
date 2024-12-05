@@ -211,18 +211,17 @@ class SubscriptionSerializer(UserSerializer):
 
     def get_recipes(self, user):
         request = self.context.get('request')
-        recipes_limit = (
-            request.GET.get('recipes_limit') if request
-            else None
-        )
-        recipes_queryset = user.recipes.all()
-        if recipes_limit:
+        if request.GET.get('recipes_limit') is not None:
             try:
-                recipes_queryset = recipes_queryset[:int(recipes_limit)]
+                recipes_limit = int(request.GET.get('recipes_limit'))
             except ValueError:
                 raise serializers.ValidationError(
                     'recipes_limit принимает только целочисленные значения.'
                 )
-        return BaseRecipesSerializer(recipes_queryset,
-                                     many=True,
-                                     read_only=True).data
+        else:
+            recipes_limit = 10**10
+        return BaseRecipesSerializer(
+            user.recipes.all()[:recipes_limit],
+            many=True,
+            read_only=True
+        ).data

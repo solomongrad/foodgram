@@ -79,7 +79,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def add_recipe_to_model(self, model, user, pk):
         if model.objects.filter(author=user, recipe__id=pk).exists():
-            raise ValidationError('Этот рецепт уже был добавлен ранее!')
+            raise ValidationError(f'Рецепта с id={pk} не существует.')
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(author=user, recipe=recipe)
         return Response(BaseRecipesSerializer(recipe).data,
@@ -129,15 +129,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount')).order_by('ingredient__name')
-        recipe_names = [
-            shopping_cart.recipe.name
+        recipes = [
+            shopping_cart.recipe
             for shopping_cart in ShoppingCart.objects.filter(author=user)
         ]
         shopping_list = form_shopping_list(user=user,
                                            ingredients=ingredients,
-                                           recipe_names=recipe_names)
-        filename = (f'shopping_list_{user.id}_'
-                    f'{datetime.now().strftime("%d-%m-%Y_%H_%M_%S")}.txt')
+                                           recipes=recipes)
+        filename = ('shopping_list_{}_{}.txt'.format(
+            user.id, datetime.now().strftime("%d-%m-%Y_%H_%M_%S")
+        ))
         return FileResponse(shopping_list,
                             content_type='text/plain',
                             as_attachment=True,
@@ -145,15 +146,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk: int):
-        get_object_or_404(Recipe, id=pk)
-        return Response(
-            {'short-link': request.build_absolute_uri(
-                location=None
-            ).replace(
-                request.get_full_path(), ''
-            ) + reverse('recipe:recipe-redirect', args=(pk,))},
-            status=status.HTTP_200_OK
-        )
+        if Recipe.objects.filter(id=pk).exists():
+            return Response(
+                {'short-link': request.build_absolute_uri(
+                    reverse('recipe:recipe-redirect', args=(pk,))
+                )},
+                status=status.HTTP_200_OK
+            )
+        raise ValidationError(f'Рецепта с id={pk} не существует.')
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -171,21 +171,13 @@ class UserViewSet(DjoserUserViewSet):
         user = request.user
         author = get_object_or_404(User, id=id)
         if author == user:
-            raise ValidationError('Подписаться на самого себя невозможно.')
+            raise ValidationError('Подписка на самого себя невозможна.')
 
         if request.method == 'DELETE':
             get_object_or_404(Subscription, user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        try:
-            Subscription.objects.create(user=user, author=author)
-        except IntegrityError:
-            raise ValidationError(
-                detail='Вы уже подписаны на этого пользователя!',
-            )
-        # ревьюверу: я искренне не имею ни малейшего понятия, как вернуть
-        # такой же ответ без сериалайзера, единственное, что приходит в голову,
-        # это сделать это вручную, но это не вариант.
+        Subscription.objects.get_or_create(user=user, author=author)
         serializer = SubscriptionSerializer(
             author,
             data=request.data,
@@ -200,20 +192,12 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscriptions(self, request):
         user = request.user
-        queryset = User.objects.filter(subscribers__user=user)
+        queryset = User.objects.filter(authors__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscriptionSerializer(pages,
                                             many=True,
                                             context={'request': request})
         return self.get_paginated_response(serializer.data)
-
-    @action(
-        detail=False,
-        methods=['get', 'put', 'patch', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
-    def me(self, request, *args, **kwargs):
-        return super().me(request, *args, **kwargs)
 
     @action(
         ['put', 'delete'],
@@ -244,3 +228,11 @@ class UserViewSet(DjoserUserViewSet):
         self.request.user.avatar = None
         self.request.user.save()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get', 'put', 'patch', 'delete'],
+        permission_classes=[IsAuthenticated]
+    )
+    def me(self, request, *args, **kwargs):
+        return super().me(request, *args, **kwargs)

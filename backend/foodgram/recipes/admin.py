@@ -28,7 +28,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('author', 'tags',)
     search_fields = ('name', 'author', 'tags',)
 
-    @display(description='Количество в избранных')
+    @display(description='В избранных')
     def added_in_favorites(self, recipe):
         return recipe.favorites.count()
 
@@ -37,9 +37,7 @@ class RecipeAdmin(admin.ModelAdmin):
         return mark_safe('<br>'.join(
             f'{recipe_ingredient.ingredient} - {recipe_ingredient.amount}'
             f'{recipe_ingredient.ingredient.measurement_unit}'
-            for recipe_ingredient in recipe.recipe_ingredients.filter(
-                recipe=recipe
-            )
+            for recipe_ingredient in recipe.recipe_ingredients.all()
         ))
 
     @display(description='Изображение')
@@ -59,11 +57,10 @@ class IngredientsAdmin(admin.ModelAdmin):
         'measurement_unit',
         'added_in_recipe'
     )
-    readonly_fields = ('added_in_recipe',)
     list_filter = ('measurement_unit',)
     search_fields = ('name', 'measurement_unit',)
 
-    @display(description='Количество рецептов с этим ингредиентом')
+    @display(description='Рецептов')
     def added_in_recipe(self, ingredient):
         return ingredient.recipes.count()
 
@@ -76,9 +73,8 @@ class TagAdmin(admin.ModelAdmin):
         'slug',
         'recipes_with_this_tag',
     )
-    readonly_fields = ('recipes_with_this_tag',)
 
-    @display(description='Количество рецептов с этим тегом')
+    @display(description='Рецептов')
     def recipes_with_this_tag(self, tag):
         return tag.recipes.count()
 

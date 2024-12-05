@@ -31,17 +31,14 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ('date_joined',)
 
-    def __str__(self):
-        return f'{self.first_name} {self.last_name}'
-
 
 class Subscription(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscribers',
+        User, on_delete=models.CASCADE, related_name='authors',
         verbose_name='Автор на которого подписан'
     )
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscriptions',
+        User, on_delete=models.CASCADE, related_name='subscribers',
         verbose_name='Подписчик'
     )
 

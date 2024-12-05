@@ -21,4 +21,4 @@ class Command(BaseCommand):
                            for row in csv.reader(file)]
             Ingredients.objects.bulk_create(models_list, ignore_conflicts=True)
 
-        self.stdout.write(f'Successfully loaded data from {file_path}')
+        self.stdout.write(f'Успешно загружены данные из {file_path}')

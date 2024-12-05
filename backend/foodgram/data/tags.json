@@ -1,1 +1,1 @@
-[{'name': 'завтрак', 'slug': 'breakfast'} {'name': 'обед', 'slug': 'lunch'} {'name': 'ужин', 'slug': 'dinner'} {'name': 'десерт', 'slug': 'dessert'} {'name': 'напиток', 'slug': 'drink'}]
+[{"name": "завтрак", "slug": "breakfast"}, {"name": "обед", "slug": "lunch"}, {"name": "ужин", "slug": "dinner"}, {"name": "десерт", "slug": "dessert"}, {"name": "напиток", "slug": "drink"}]
