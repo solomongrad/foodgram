@@ -11,22 +11,51 @@ Foodgram - сайт для ценителей вкусной еды.
 ```bash
 docker compose up
 ```
+##### и откройте страницу http://localhost/api/docs/
 
-##Ревьюеру
+сайт работает на домене: https://foodgramfree.sytes.net/about
 
-ссылка на сайт https://foodgramfree.sytes.net
+## Как запустить проект на удалённом сервере?
 
-данные для админки:
-```
-solomongrad@gmail.com
-```
-
-```
-Foodgram228
+##### 1. Клонировать репозиторий.
+```bash
+git clone git@github.com:solomongrad/foodgram.git
 ```
 
-##Если сайт не работает: я сделал всё возможное, чтобы максимально почистить вм, но при запуске проекта всё равно не хватает места, я понятия не имею, что мне делать 
+##### 2. Проверить, установлен ли у вас docker
+```bash
+sudo systemctl status docker
+```
+
+##### 2.1. Установить докер, в случае его отсуствия
+```bash
+sudo apt install curl
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+sudo apt-get install docker-compose-plugin
+```
+
+##### 3. Создать новую папку и файл на сервере
+```bash
+mkdir foodgram && cd foodgram && touch .env
+```
+
+##### 4. Заполнить .env на основе .env.example и скопировать на сервер файл docker-compose.production.yml
+
+##### 5. Запустить проект.
+```bash
+sudo docker compose -f docker-compose.production.yml up -d
+```
+
+##### 6. Выполнить миграции, и создать на сервере теги и ингредиенты
+```bash
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_tags
+```
+
+##### Также возможно всё это сделать с помощью Github Actions!
 
 ### Автор
 
-[zxc](https://github.com/solomongrad)
+[Куделин Роман](https://github.com/solomongrad)

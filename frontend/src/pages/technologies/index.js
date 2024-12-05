@@ -30,6 +30,21 @@ const Technologies = () => {
               <li className={styles.textItem}>
                 Djoser
               </li>
+              <li className={styles.textItem}>
+                Nginx
+              </li>
+              <li className={styles.textItem}>
+              PostgreSQL
+              </li>
+              <li className={styles.textItem}>
+                Docker
+              </li>
+              <li className={styles.textItem}>
+                Github Actions
+              </li>
+              <li className={styles.textItem}>
+                javascript
+              </li>
             </ul>
           </div>
         </div>
