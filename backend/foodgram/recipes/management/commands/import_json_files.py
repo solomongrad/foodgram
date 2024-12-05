@@ -12,8 +12,8 @@ User = get_user_model()
 file_model = [
     {'file_name': 'ingredients.json',
      'model': Ingredients},
-     {'file_name': 'tags.json',
-      'model': Tag}
+    {'file_name': 'tags.json',
+     'model': Tag}
 ]
 
 

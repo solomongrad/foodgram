@@ -15,7 +15,8 @@ def form_shopping_list(user, ingredients, recipes):
             ' - {amount} {ingredient__measurement_unit}\n'.format(**ingredient)
         )
     shopping_list.append(
-        'Все эти продукты вам пригодятся для приготовления следующих рецептов:\n'
+        'Все эти продукты вам пригодятся для приготовления '
+        'следующих рецептов:\n'
     )
     shopping_list.append('\n'.join(
         f'· {recipe.name}'

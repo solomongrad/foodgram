@@ -1,4 +1,4 @@
-import json
+import csv
 import os
 
 from django.conf import settings
@@ -11,15 +11,13 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    """Класс загрузки базы данных ингредиентов."""
+    """Класс загрузки базы данных тегов."""
 
     def handle(self, *args, **kwargs):
-        file_path = os.path.join(settings.IMPORTING_FILES_DIR,
-                                 'tags.json')
+        file_path = os.path.join(settings.IMPORTING_FILES_DIR, 'tags.csv')
         with open(file_path, mode='r', encoding='utf-8') as file:
-            Tag.objects.bulk_create(
-                [Tag(**row) for row in json.load(file)],
-                ignore_conflicts=True
-            )
+            models_list = [Tag(name=row[0], slug=row[1])
+                           for row in csv.reader(file)]
+            Tag.objects.bulk_create(models_list, ignore_conflicts=True)
 
         self.stdout.write(f'Успешно загружены данные из {file_path}')

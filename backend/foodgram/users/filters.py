@@ -17,6 +17,7 @@ class UserHasRecipes(admin.SimpleListFilter):
         if self.value() == 'no':
             return queryset.filter(recipes=None)
 
+
 class UserHasSubscriptions(admin.SimpleListFilter):
     title = 'есть подписки'
     parameter_name = 'has_subscriptions'
@@ -32,6 +33,7 @@ class UserHasSubscriptions(admin.SimpleListFilter):
             return queryset.exclude(subscribers=None)
         if self.value() == 'no':
             return queryset.filter(subscribers=None)
+
 
 class UserHasSubscribers(admin.SimpleListFilter):
     title = 'есть подписчики'
