@@ -22,7 +22,7 @@ class Tag(models.Model):
     slug = models.SlugField(
         unique=True,
         max_length=MAX_LENGTH_TAG,
-        verbose_name='слаг'
+        verbose_name='Слаг'
     )
 
     class Meta:
@@ -86,10 +86,10 @@ class Recipe(models.Model):
         validators=(
             MinValueValidator(MIN_COOKING_TIME),
         ),
-        verbose_name='Время приготовления в мин'
+        verbose_name='Время (мин)'
     )
     created_at = models.DateTimeField(auto_now_add=True,
-                                      verbose_name='время создания рецепта')
+                                      verbose_name='Время создания рецепта')
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -132,12 +132,12 @@ class BaseCartOrFavorite(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='владелец'
+        verbose_name='Владелец'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        verbose_name='рецепт'
+        verbose_name='Рецепт'
     )
 
     class Meta:

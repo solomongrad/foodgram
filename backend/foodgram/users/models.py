@@ -8,14 +8,14 @@ class User(AbstractUser):
 
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
-    first_name = models.CharField(verbose_name='имя пользователя',
+    first_name = models.CharField(verbose_name='Имя пользователя',
                                   max_length=150)
-    last_name = models.CharField(verbose_name='фамилия пользователя',
+    last_name = models.CharField(verbose_name='Фамилия пользователя',
                                  max_length=150)
-    username = models.CharField(verbose_name='никнейм пользователя',
+    username = models.CharField(verbose_name='Никнейм',
                                 validators=[UnicodeUsernameValidator()],
                                 max_length=150, unique=True)
-    email = models.EmailField(verbose_name='электронная почта пользователя',
+    email = models.EmailField(verbose_name='Почта',
                               max_length=254, unique=True)
     avatar = models.ImageField(
         verbose_name='Аватар пользователя',
@@ -27,7 +27,7 @@ class User(AbstractUser):
     )
 
     class Meta:
-        verbose_name = 'пользователь'
+        verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('date_joined',)
 
@@ -43,7 +43,7 @@ class Subscription(models.Model):
     )
 
     class Meta:
-        verbose_name = 'подписка'
+        verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         ordering = ('-id',)
         constraints = [

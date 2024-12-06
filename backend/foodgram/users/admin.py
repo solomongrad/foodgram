@@ -26,7 +26,7 @@ class UserAdmin(UserAdmin):
     def get_full_name(self, user):
         return f'{user.first_name} {user.last_name}'
 
-    @display(description='Написанных рецептов')
+    @display(description='Рецептов')
     def recipes_wrote(self, user):
         return user.recipes.count()
 

@@ -2,8 +2,8 @@ from django.contrib import admin
 
 
 class BaseHasRecipes(admin.SimpleListFilter):
-    title = 'есть'
-    parameter_name = 'has'
+    title = ''
+    parameter_name = ''
 
     def lookups(self, request, model_admin):
         return [
@@ -19,12 +19,12 @@ class BaseHasRecipes(admin.SimpleListFilter):
 
 
 class UserHasRecipes(BaseHasRecipes):
-    title = 'есть рецепты'
+    title = 'Есть рецепты'
     parameter_name = 'has_recipe'
 
 
 class UserHasSubscriptions(BaseHasRecipes):
-    title = 'есть подписки'
+    title = 'Есть подписки'
     parameter_name = 'has_subscriptions'
 
     def queryset(self, request, queryset):
@@ -35,7 +35,7 @@ class UserHasSubscriptions(BaseHasRecipes):
 
 
 class UserHasSubscribers(BaseHasRecipes):
-    title = 'есть подписчики'
+    title = 'Есть подписчики'
     parameter_name = 'has_subscribers'
 
     def queryset(self, request, queryset):
