@@ -145,14 +145,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['GET'], url_path='get-link')
     def get_short_link(self, request, pk: int):
-        if Recipe.objects.filter(id=pk).exists():
-            return Response(
-                {'short-link': request.build_absolute_uri(
-                    reverse('recipe:recipe-redirect', args=(pk,))
-                )},
-                status=status.HTTP_200_OK
-            )
-        raise ValidationError(f'Рецепта с id={pk} не существует.')
+        if not Recipe.objects.filter(id=pk).exists():
+            raise ValidationError(f'Рецепта с id={pk} не существует.')
+        return Response(
+            {'short-link': request.build_absolute_uri(
+                reverse('recipe:recipe-redirect', args=(pk,))
+            )},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(DjoserUserViewSet):
