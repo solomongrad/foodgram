@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from core.constants import FILTERS_LOOKUPS
+from .constants import FILTERS_LOOKUPS
 
 
 class BaseHasRecipes(admin.SimpleListFilter):
