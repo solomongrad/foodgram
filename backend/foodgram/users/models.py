@@ -8,9 +8,9 @@ class User(AbstractUser):
 
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
-    first_name = models.CharField(verbose_name='Имя пользователя',
+    first_name = models.CharField(verbose_name='Имя',
                                   max_length=150)
-    last_name = models.CharField(verbose_name='Фамилия пользователя',
+    last_name = models.CharField(verbose_name='Фамилия',
                                  max_length=150)
     username = models.CharField(verbose_name='Никнейм',
                                 validators=[UnicodeUsernameValidator()],
@@ -18,12 +18,10 @@ class User(AbstractUser):
     email = models.EmailField(verbose_name='Почта',
                               max_length=254, unique=True)
     avatar = models.ImageField(
-        verbose_name='Аватар пользователя',
+        verbose_name='Аватар',
         upload_to='avatars/',
         blank=True,
-        help_text=(
-            'Аватар пользователя, по умолчанию загружается другая картинка'
-        )
+        help_text=('Аватар')
     )
 
     class Meta:
@@ -35,7 +33,7 @@ class User(AbstractUser):
 class Subscription(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='authors',
-        verbose_name='Автор на которого подписан'
+        verbose_name='Автор'
     )
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscribers',

@@ -12,6 +12,11 @@ from .models import (
 )
 
 
+class RecipeIngredientAdmin(admin.StackedInline):
+    model = RecipeIngredient
+    list_display = ('recipe', 'ingredient', 'amount',)
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
@@ -27,6 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
     readonly_fields = ('added_in_favorites',)
     list_filter = ('author', 'tags',)
     search_fields = ('name', 'author', 'tags',)
+    inlines = (RecipeIngredientAdmin,)
 
     @display(description='В избранных')
     def added_in_favorites(self, recipe):
@@ -87,8 +93,3 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('author', 'recipe',)
-
-
-@admin.register(RecipeIngredient)
-class RecipeIngredientAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredient', 'amount',)

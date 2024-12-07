@@ -44,8 +44,7 @@ class UserAdmin(UserAdmin):
             return mark_safe(
                 f'<img src={user.avatar.url} width="75" height="55"'
             )
-        else:
-            return ''
+        return ''
 
 
 @admin.register(Subscription)

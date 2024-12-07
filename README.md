@@ -13,7 +13,7 @@ docker compose up
 ```
 ##### и откройте страницу http://localhost/api/docs/
 
-сайт работает на домене: https://foodgramfree.sytes.net/about
+сайт работает на здесь: [тык](https://foodgramfree.sytes.net/about)
 
 ## Как запустить проект на удалённом сервере?
 
