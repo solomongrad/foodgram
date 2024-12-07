@@ -2,8 +2,8 @@ from django.db import transaction
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
-from core.serializers import Base64ImageField
 from core.constants import MIN_RECIPE_INGREDIENT_AMOUNT
+from core.serializers import Base64ImageField
 from recipes.models import (
     Favorite,
     Ingredients,
