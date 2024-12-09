@@ -59,7 +59,6 @@ class Ingredients(models.Model):
         return f'{self.name.capitalize()} - {self.measurement_unit}.'
 
 
-
 class Recipe(models.Model):
     author = models.ForeignKey(
         User,
