@@ -56,7 +56,8 @@ class Ingredients(models.Model):
         )
 
     def __str__(self):
-        return self.name
+        return f'{self.name.capitalize()} - {self.measurement_unit}.'
+
 
 
 class Recipe(models.Model):

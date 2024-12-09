@@ -14,12 +14,7 @@ from .models import (
 
 class RecipeIngredientAdmin(admin.StackedInline):
     model = RecipeIngredient
-    fields = ('recipe', 'ingredient', 'amount', 'get_measurement_unit')
-    readonly_fields = ('get_measurement_unit',)
-
-    @display(description='Единица измерения')
-    def get_measurement_unit(self, recipe_ingredient):
-        return recipe_ingredient.ingredient.measurement_unit
+    fields = ('recipe', 'ingredient', 'amount')
 
 
 @admin.register(Recipe)
